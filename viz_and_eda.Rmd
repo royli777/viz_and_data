@@ -5,14 +5,22 @@ date: "`r Sys.Date()`"
 output: github_document
 ---
 
+knitr::kable(digits = 2)
+
 month = lubridate::floor_date(date, unit = "month")
+
 count(name, name= "n_obs")
+
 group_by(name,month) |>
 summarize(n_obs = n())
+
  pivot_wider(
     names_from = name,
     values_from = n
   )
+  
+mutate(yesterday_tmax = lag(tmax,3))
+  
 ```{r}
 library(tidyverse)
 library(ggplot2)
@@ -128,5 +136,37 @@ weather_df |>
   knitr::kable(digits = 2)
 ```
 
+## Grouped mutate
 
 ```{r}
+weather_df |>
+  group_by(name) |>
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE),
+         centered_tmax = tmax- mean_tmax) |>
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+```
+
+```{r}
+weather_df |>
+  group_by(name,month)|>
+  mutate(tmax_rank= min_rank(desc(tmax)))|>
+  filter(tmax_rank <2)
+```
+
+lags
+
+```{r}
+weather_df |>
+  group_by(name)|>
+  mutate(yesterday_tmax = lag(tmax,3))
+```
+
+```{r}
+weather_df |>
+  group_by(name) |>
+  mutate(temp_change = tmax - lag(tmax)) |>
+  summarize(
+    sd_temp_change = sd(temp_change, na.rm  = TRUE)
+  )
+```
